@@ -1,13 +1,19 @@
 {
   "name": "live_location_tracker",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Live Location Tracker using Node.js, Express, Socket.IO and MongoDB",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "nodejs",
+    "express",
+    "socket.io",
+    "mongodb",
+    "tracker"
+  ],
+  "author": "Naya Sain",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

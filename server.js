@@ -46,13 +46,15 @@ console.log(err);
 
 });
 
-server.listen(config.port, () => {
+const PORT = process.env.PORT || config.port;
+
+server.listen(PORT, () => {
 
     console.log("================================");
 
-    console.log("Live Location Tracker Started");
+    console.log("🚀 Live Location Tracker Started");
 
-    console.log(`http://localhost:${config.port}`);
+    console.log(`Server running on port ${PORT}`);
 
     console.log("================================");
 

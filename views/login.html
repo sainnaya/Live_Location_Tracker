@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial;
+        }
+
+        body{
+
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#4facfe;
+
+        }
+
+        .login{
+
+            width:350px;
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            box-shadow:0 0 20px rgba(0,0,0,.2);
+
+        }
+
+        h1{
+
+            text-align:center;
+            margin-bottom:20px;
+
+        }
+
+        input{
+
+            width:100%;
+            padding:12px;
+            margin:10px 0;
+            border:1px solid #ccc;
+            border-radius:5px;
+
+        }
+
+        button{
+
+            width:100%;
+            padding:12px;
+            border:none;
+            background:#0077ff;
+            color:white;
+            font-size:18px;
+            border-radius:5px;
+            cursor:pointer;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="login">
+
+<h1>Live Location Tracker</h1>
+
+<form action="/login" method="POST">
+
+<input
+type="text"
+name="username"
+placeholder="Username"
+required>
+
+<input
+type="password"
+name="password"
+placeholder="Password"
+required>
+
+<button>
+
+Login
+
+</button>
+
+</form>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            padding: 30px;
+            background: #f4f4f4;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #0077ff;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📍 Live Location Dashboard</h1>
+
+<div class="stats">
+
+<div>Total Users :
+<span id="total">0</span>
+</div>
+
+<div>Online :
+<span id="online">0</span>
+</div>
+
+<div>Offline :
+<span id="offline">0</span>
+</div>
+
+</div>
+
+
+<table>
+
+
+<thead>
+
+<tr>
+    <th>User</th>
+    <th>Latitude</th>
+    <th>Longitude</th>
+    <th>Speed</th>
+    <th>Accuracy</th>
+    <th>Status</th>
+    <th>Updated</th>
+    <th>Map</th>
+</tr>
+
+</thead>
+
+<tbody id="tbody">
+
+</tbody>
+
+</table>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const socket = io();
+
+const tbody = document.getElementById("tbody");
+
+const users = {};
+
+fetch("/targets")
+.then(res => res.json())
+.then(data => {
+
+    for(const id in data){
+        users[id] = data[id];
+    }
+
+    render();
+
+});
+
+// Auto refresh every 3 seconds
+setInterval(() => {
+
+    fetch("/targets")
+        .then(res => res.json())
+        .then(data => {
+
+            for (const id in data) {
+                users[id] = data[id];
+            }
+
+            render();
+
+        });
+
+}, 3000);
+
+socket.on("location-update",(user)=>{
+
+    users[user.id] = user;
+
+    render();
+
+});
+
+function render(){
+
+    tbody.innerHTML = "";
+
+    for(const id in users){
+
+        const user = users[id];
+
+        tbody.innerHTML += `
+        <tr>
+
+            <td>${id}</td>
+
+            <td>${user.lat}</td>
+
+            <td>${user.lng}</td>
+
+            <td>${((user.speed || 0) * 3.6).toFixed(2)} km/h</td>
+
+            <td>${(user.accuracy || 0).toFixed(2)} m</td>
+
+            <td style="color:green;">🟢 ${user.status}</td>
+
+            <td>${user.lastUpdated}</td>
+
+            <td>
+                <a href="/map?id=${id}">📍 View</a>
+            </td>
+
+        </tr>
+        `;
+
+    }
+
+}
+
+document
+.getElementById("search")
+.addEventListener("keyup", render);
+
+const search =
+document
+.getElementById("search")
+.value
+.toLowerCase();
+
+for(const id in users){
+
+if(!id.toLowerCase().includes(search))
+continue;
+
+// create row
+
+}
+let online=0;
+
+let offline=0;
+
+for(const id in users){
+
+if(users[id].status=="Online")
+online++;
+
+else
+offline++;
+
+}
+
+document.getElementById("total").innerHTML=
+Object.keys(users).length;
+
+document.getElementById("online").innerHTML=
+online;
+
+document.getElementById("offline").innerHTML=
+offline;
+
+TARGETS[id].lastSeen =
+new Date().toLocaleString();
+
+
+</script>
+<style>
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:12px;
+    border:1px solid #ddd;
+}
+
+@media(max-width:768px){
+
+    body{
+        padding:10px;
+    }
+
+    table{
+        display:block;
+        overflow-x:auto;
+        white-space:nowrap;
+    }
+
+    th,td{
+        font-size:14px;
+        padding:8px;
+    }
+
+}
+</style>
+
+<input
+type="text"
+id="search"
+placeholder="Search User..."
+style="padding:10px;width:300px;margin-bottom:20px;">
+
+</body>
+</html>

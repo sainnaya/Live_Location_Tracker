@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Live Location Tracker</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#4facfe,#00f2fe);
+}
+
+.card{
+width:430px;
+background:#fff;
+padding:30px;
+border-radius:15px;
+box-shadow:0 10px 25px rgba(0,0,0,.2);
+text-align:center;
+}
+
+h1{
+margin-bottom:20px;
+color:#333;
+}
+
+.info{
+margin:12px 0;
+font-size:18px;
+}
+
+span{
+font-weight:bold;
+color:#0077ff;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:20px;
+font-size:18px;
+border:none;
+border-radius:8px;
+background:#0077ff;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#005ed6;
+}
+
+button:disabled{
+background:gray;
+cursor:not-allowed;
+}
+
+#status{
+margin-top:20px;
+font-weight:bold;
+color:green;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>📍 Live Location Tracker</h1>
+
+<div class="info">
+User ID :
+<span id="userid"></span>
+</div>
+
+<div class="info">
+Latitude :
+<span id="lat">0</span>
+</div>
+
+<div class="info">
+Longitude :
+<span id="lng">0</span>
+</div>
+
+<div class="info">
+Speed :
+<span id="speed">0</span> km/h
+</div>
+
+<div class="info">
+Accuracy :
+<span id="accuracy">0</span> m
+</div>
+
+<div class="info">
+Updated :
+<span id="time">--</span>
+</div>
+
+<button id="start">
+Start Tracking
+</button>
+
+<p id="status">Tracking Stopped</p>
+
+</div>
+
+<script>
+
+const id = localStorage.getItem("tracker-id") || generateID();
+
+document.getElementById("userid").innerText = id;
+
+const btn = document.getElementById("start");
+
+btn.addEventListener("click", startTracking);
+
+function startTracking(){
+
+btn.disabled=true;
+btn.innerText="Tracking...";
+
+document.getElementById("status").innerHTML="🟢 Tracking Started";
+
+navigator.geolocation.watchPosition(
+
+(position)=>{
+
+const lat = position.coords.latitude;
+const lng = position.coords.longitude;
+const accuracy = position.coords.accuracy;
+const speed = position.coords.speed ? (position.coords.speed*3.6).toFixed(2) : 0;
+
+document.getElementById("lat").innerText = lat.toFixed(6);
+document.getElementById("lng").innerText = lng.toFixed(6);
+document.getElementById("accuracy").innerText = accuracy.toFixed(2);
+document.getElementById("speed").innerText = speed;
+document.getElementById("time").innerText = new Date().toLocaleTimeString();
+
+fetch("/tracker",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+id,
+lat,
+lng,
+speed,
+accuracy
+
+})
+
+})
+
+fetch("/permission", {
+
+    method: "POST",
+
+    headers: {
+
+        "Content-Type": "application/json"
+
+    },
+
+    body: JSON.stringify({
+
+        token,
+        userId: id,
+        permission: "Allowed"
+
+    })
+
+})
+
+.then(res=>res.text())
+
+.then(data=>{
+
+console.log(data);
+
+document.getElementById("status").innerHTML="✅ Location Sent Successfully";
+
+})
+
+.catch(err=>{
+
+console.log(err);
+
+document.getElementById("status").innerHTML="❌ Server Error";
+
+});
+
+},
+
+(error)=>{
+
+alert(error.message);
+
+btn.disabled=false;
+btn.innerText="Start Tracking";
+
+document.getElementById("status").innerHTML="🔴 Tracking Stopped";
+
+},
+
+{
+
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:10000
+
+}
+
+);
+
+}
+
+function generateID(){
+
+const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+let result="";
+
+for(let i=0;i<8;i++){
+
+result+=chars[Math.floor(Math.random()*chars.length)];
+
+}
+
+localStorage.setItem("tracker-id",result);
+
+return result;
+
+}
+
+</script>
+
+</body>
+
+</html>

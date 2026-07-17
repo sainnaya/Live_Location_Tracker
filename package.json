@@ -1,0 +1,23 @@
+{
+  "name": "live_location_tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cloudflared": "^0.7.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "mongodb": "^7.5.0",
+    "mongoose": "^9.7.4",
+    "socket.io": "^4.8.3",
+    "tarkine": "^1.1.1"
+  }
+}

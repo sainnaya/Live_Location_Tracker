@@ -84,6 +84,80 @@ router.post("/login", (req, res) => {
     res.send("Invalid Login");
 });
 
+
+const crypto = require("crypto");
+
+const LINKS = {};
+
+router.get("/create-link", (req, res) => {
+
+    const token = crypto.randomBytes(16).toString("hex");
+
+    LINKS[token] = true;
+
+    const baseURL =
+        process.env.RENDER_EXTERNAL_URL ||
+        `${req.protocol}://${req.get("host")}`;
+
+    res.json({
+        link: `${baseURL}/share/${token}`
+    });
+
+});
+
+
+router.get("/share/:token", async (req, res) => {
+
+    const token = req.params.token;
+
+    try {
+
+        await LinkLog.create({
+
+            token: token,
+            ip: req.ip,
+            browser: req.headers["user-agent"],
+            openedAt: new Date()
+
+        });
+
+        console.log("Link Opened and Saved");
+
+        res.sendFile(path.join(__dirname, "views", "tracker.html"));
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.send(err.message);
+
+    }
+
+});
+
+
+router.post("/permission", async (req, res) => {
+
+    const { token, userId, permission } = req.body;
+
+    await LinkLog.findOneAndUpdate(
+
+        { token },
+
+        {
+
+            userId,
+
+            locationPermission: permission
+
+        }
+
+    );
+
+    res.send("Updated");
+
+});
+
 // =========================
 // Authentication
 // =========================
@@ -307,78 +381,6 @@ router.get("/export/:id", async (req, res) => {
 
 });
 
-const crypto = require("crypto");
-
-const LINKS = {};
-
-router.get("/create-link", (req, res) => {
-
-    const token = crypto.randomBytes(16).toString("hex");
-
-    LINKS[token] = true;
-
-    const baseURL =
-        process.env.RENDER_EXTERNAL_URL ||
-        `${req.protocol}://${req.get("host")}`;
-
-    res.json({
-        link: `${baseURL}/share/${token}`
-    });
-
-});
-
-
-router.get("/share/:token", async (req, res) => {
-
-    const token = req.params.token;
-
-    try {
-
-        await LinkLog.create({
-
-            token: token,
-            ip: req.ip,
-            browser: req.headers["user-agent"],
-            openedAt: new Date()
-
-        });
-
-        console.log("Link Opened and Saved");
-
-        res.sendFile(path.join(__dirname, "views", "tracker.html"));
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.send(err.message);
-
-    }
-
-});
-
-
-router.post("/permission", async (req, res) => {
-
-    const { token, userId, permission } = req.body;
-
-    await LinkLog.findOneAndUpdate(
-
-        { token },
-
-        {
-
-            userId,
-
-            locationPermission: permission
-
-        }
-
-    );
-
-    res.send("Updated");
-
-});
 
 router.get("/logs", async (req, res) => {
 

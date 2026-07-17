@@ -4,6 +4,7 @@ const LinkLog = require("./models/LinkLog");
 const router = express.Router();
 const config = require("./config");
 const Location = require("./models/Location");
+const axios = require("axios");
 
 const TARGETS = {};
 const USER_STATUS = {};
@@ -29,6 +30,31 @@ setInterval(() => {
 
 }, 5000);
 
+
+async function getAddress(lat, lng) {
+
+    try {
+
+        const response = await axios.get(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            {
+                headers: {
+                    "User-Agent": "LiveLocationTracker"
+                }
+            }
+        );
+
+        return response.data.display_name;
+
+    } catch (err) {
+
+        console.log("Address Error:", err.message);
+
+        return "Address Not Found";
+    }
+
+}
+
 // =========================
 // Login
 // =========================
@@ -40,21 +66,22 @@ router.get("/login", (req, res) => {
 
 router.post("/login", (req, res) => {
 
+    console.log(req.body);
+
     const { username, password } = req.body;
+
+    console.log(username, password);
+    console.log(config.username, config.password);
 
     if (
         username === config.username &&
         password === config.password
     ) {
-
         res.cookie("token", config.token);
-
         return res.redirect("/");
-
     }
 
     res.send("Invalid Login");
-
 });
 
 // =========================
@@ -92,7 +119,8 @@ router.get("/tracker", (req, res) => {
 
 });
 
-// =========================
+
+   // =========================
 // Receive GPS Data
 // =========================
 router.post("/tracker", async (req, res) => {
@@ -101,6 +129,7 @@ router.post("/tracker", async (req, res) => {
 
         const {
             id,
+            name,
             lat,
             lng,
             speed,
@@ -120,37 +149,78 @@ router.post("/tracker", async (req, res) => {
 
         }
 
+        // Reverse Geocoding
+        const address = await getAddress(lat, lng);
+
+        // Update Live Target Data
+        TARGETS[id].name = name;
         TARGETS[id].lat = lat;
         TARGETS[id].lng = lng;
         TARGETS[id].speed = speed;
         TARGETS[id].accuracy = accuracy;
+        TARGETS[id].address = address;
         TARGETS[id].status = "Online";
         TARGETS[id].lastUpdated = new Date().toLocaleTimeString();
 
-        TARGETS[id].history.push([lat, lng]);
+        // Save Route History
+        TARGETS[id].history.push({
+            name,
+            lat,
+            lng,
+            address,
+            time: new Date()
+        });
 
+        // Save in MongoDB
         await Location.create({
 
             userId: id,
+
+            name: name,
+
             latitude: lat,
+
             longitude: lng,
+
             speed: speed,
+
             accuracy: accuracy,
+
+            address: address,
+
             status: "Online",
+
             lastUpdated: new Date()
 
         });
 
+        // Send Live Update to Dashboard & Map
         global.IO.emit("location-update", {
 
             id,
-            ...TARGETS[id]
+
+            name,
+
+            lat,
+
+            lng,
+
+            speed,
+
+            accuracy,
+
+            address,
+
+            status: "Online",
+
+            lastUpdated: TARGETS[id].lastUpdated
 
         });
 
-        res.send("Location Saved");
+        res.send("Location Saved Successfully");
 
     }
+
     catch (err) {
 
         console.log(err);
@@ -159,8 +229,7 @@ router.post("/tracker", async (req, res) => {
 
     }
 
-});
-
+})
 // =========================
 // Dashboard Data
 // =========================
@@ -248,8 +317,12 @@ router.get("/create-link", (req, res) => {
 
     LINKS[token] = true;
 
+    const baseURL =
+        process.env.RENDER_EXTERNAL_URL ||
+        `${req.protocol}://${req.get("host")}`;
+
     res.json({
-        link: `http://localhost:6060/share/${token}`
+        link: `${baseURL}/share/${token}`
     });
 
 });

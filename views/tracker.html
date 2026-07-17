@@ -25,7 +25,7 @@ background:linear-gradient(135deg,#4facfe,#00f2fe);
 }
 
 .card{
-width:430px;
+width:450px;
 background:#fff;
 padding:30px;
 border-radius:15px;
@@ -41,11 +41,20 @@ color:#333;
 .info{
 margin:12px 0;
 font-size:18px;
+text-align:left;
 }
 
 span{
 font-weight:bold;
 color:#0077ff;
+}
+
+#address{
+display:block;
+margin-top:5px;
+font-size:15px;
+color:#444;
+word-wrap:break-word;
 }
 
 button{
@@ -72,6 +81,7 @@ cursor:not-allowed;
 #status{
 margin-top:20px;
 font-weight:bold;
+font-size:16px;
 color:green;
 }
 
@@ -115,6 +125,11 @@ Updated :
 <span id="time">--</span>
 </div>
 
+<div class="info">
+📍 Address :
+<span id="address">Waiting...</span>
+</div>
+
 <button id="start">
 Start Tracking
 </button>
@@ -131,19 +146,27 @@ document.getElementById("userid").innerText = id;
 
 const btn = document.getElementById("start");
 
-btn.addEventListener("click", startTracking);
+btn.onclick = startTracking;
 
 function startTracking(){
 
-btn.disabled=true;
-btn.innerText="Tracking...";
+btn.disabled = true;
+btn.innerText = "Tracking...";
+document.getElementById("status").innerHTML = "🛰 Tracking Started";
 
-document.getElementById("status").innerHTML="🟢 Tracking Started";
+if(!navigator.geolocation){
+
+alert("Geolocation is not supported.");
+
+return;
+
+}
 
 navigator.geolocation.watchPosition(
 
-(position)=>{
+async(position)=>{
 
+const name = document.getElementById("name").value;
 const lat = position.coords.latitude;
 const lng = position.coords.longitude;
 const accuracy = position.coords.accuracy;
@@ -155,7 +178,9 @@ document.getElementById("accuracy").innerText = accuracy.toFixed(2);
 document.getElementById("speed").innerText = speed;
 document.getElementById("time").innerText = new Date().toLocaleTimeString();
 
-fetch("/tracker",{
+try{
+
+const res = await fetch("/tracker",{
 
 method:"POST",
 
@@ -166,6 +191,7 @@ headers:{
 body:JSON.stringify({
 
 id,
+name,
 lat,
 lng,
 speed,
@@ -173,45 +199,44 @@ accuracy
 
 })
 
-})
+});
 
-fetch("/permission", {
-
-    method: "POST",
-
-    headers: {
-
-        "Content-Type": "application/json"
-
-    },
-
-    body: JSON.stringify({
-
-        token,
-        userId: id,
-        permission: "Allowed"
-
-    })
-
-})
-
-.then(res=>res.text())
-
-.then(data=>{
+const data = await res.text();
 
 console.log(data);
 
 document.getElementById("status").innerHTML="✅ Location Sent Successfully";
 
-})
-
-.catch(err=>{
+}
+catch(err){
 
 console.log(err);
 
 document.getElementById("status").innerHTML="❌ Server Error";
 
-});
+}
+
+// Reverse Geocoding
+try{
+
+const geo = await fetch(
+
+`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+
+);
+
+const address = await geo.json();
+
+document.getElementById("address").innerText =
+address.display_name || "Address Not Found";
+
+}
+catch{
+
+document.getElementById("address").innerText =
+"Unable to fetch address";
+
+}
 
 },
 
@@ -222,7 +247,7 @@ alert(error.message);
 btn.disabled=false;
 btn.innerText="Start Tracking";
 
-document.getElementById("status").innerHTML="🔴 Tracking Stopped";
+document.getElementById("status").innerHTML=" Tracking Stopped";
 
 },
 

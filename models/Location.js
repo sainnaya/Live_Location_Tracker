@@ -2,25 +2,52 @@ const mongoose = require("mongoose");
 
 const LocationSchema = new mongoose.Schema({
 
-    id: String,
+    userId: {
+        type: String,
+        required: true
+    },
 
-    lat: Number,
+    name: {
+    type: String
+    },
 
-    lng: Number,
+    latitude: {
+        type: Number,
+        required: true
+    },
 
-    speed: Number,
+    longitude: {
+        type: Number,
+        required: true
+    },
 
-    accuracy: Number,
+    speed: {
+        type: Number,
+        default: 0
+    },
 
-    status: String,
+    accuracy: {
+        type: Number,
+        default: 0
+    },
 
-    lastUpdated: String,
+    address: {
+        type: String,
+        default: "Address Not Found"
+    },
 
-    createdAt: {
+    status: {
+        type: String,
+        default: "Online"
+    },
+
+    lastUpdated: {
         type: Date,
         default: Date.now
     }
 
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model("Location", LocationSchema);

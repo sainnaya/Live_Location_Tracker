@@ -4,13 +4,11 @@
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Live Location Map</title>
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
 
@@ -18,37 +16,29 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial;
+font-family:Arial,sans-serif;
 }
 
 body{
-
 height:100vh;
-
 display:flex;
-
 flex-direction:column;
-
 }
 
 header{
-
 background:#0077ff;
-
 color:white;
-
 padding:15px;
-
 text-align:center;
+}
 
+header p{
+margin-top:6px;
 }
 
 #map{
-
-height:100%;
-
+flex:1;
 width:100%;
-
 }
 
 </style>
@@ -61,31 +51,26 @@ width:100%;
 
 <h2>📍 Live Location Tracker</h2>
 
-<p>User :
-<span id="userid"></span>
-</p>
+<p>User : <span id="userid"></span></p>
 
-<p>Total Distance :
-<span id="distance">0 km</span>
-</p>
+<p>📏 Distance : <span id="distance">0.00 km</span></p>
 
-<p>Speed :
-<span id="speed">0 km/h</span>
-</p>
+<p>🚗 Speed : <span id="speed">0.00 km/h</span></p>
 
 </header>
 
 <div id="map"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-const id = new URLSearchParams(location.search).get("id");
+const id=new URLSearchParams(location.search).get("id");
 
 document.getElementById("userid").innerHTML=id;
+
+const socket=io();
 
 const map=L.map("map").setView([20.5937,78.9629],5);
 
@@ -105,91 +90,153 @@ attribution:"© OpenStreetMap"
 
 const marker=L.marker([20.5937,78.9629]).addTo(map);
 
-marker.bindPopup("Waiting for Location...").openPopup();
+const route=L.polyline([],{
 
-const route = L.polyline([], {
+color:"blue",
 
-    color: "blue",
-
-    weight: 5
+weight:5
 
 }).addTo(map);
 
-const socket=io();
+let totalDistance=0;
 
-fetch(`/history/${id}`)
+let previous=null;
 
-.then(res => res.json())
+fetch("/history/"+id)
 
-.then(history => {
+.then(res=>res.json())
 
-    history.forEach(point => {
+.then(history=>{
 
-        route.addLatLng([point.lat, point.lng]);
+history.forEach(point=>{
 
-    });
+const lat=Number(point.latitude);
+const lng=Number(point.longitude);
 
-    if(history.length){
+route.addLatLng([lat,lng]);
 
-        map.fitBounds(route.getBounds());
+if(previous){
 
-    }
+totalDistance+=distance(
 
-});
+previous.lat,
 
-socket.on("location-update", (user) => {
+previous.lng,
 
-    if (user.id !== id) return;
+lat,
 
-    const lat = parseFloat(user.lat);
-    const lng = parseFloat(user.lng);
+lng
 
-    marker.setLatLng([lat, lng]);
-
-    route.addLatLng([lat, lng]);
-
-    marker.setPopupContent(`
-
-<b>User :</b> ${id}<br>
-
-Speed : ${(user.speed * 3.6).toFixed(2)} km/h<br>
-
-Accuracy : ${user.accuracy.toFixed(1)} m<br>
-
-Updated : ${user.lastUpdated}
-
-`);
-
-    map.fitBounds(route.getBounds());
-
-});
-
-function distance(lat1, lon1, lat2, lon2){
-
-const R = 6371;
-
-const dLat = (lat2-lat1)*Math.PI/180;
-
-const dLon = (lon2-lon1)*Math.PI/180;
-
-const a =
-
-Math.sin(dLat/2)**2 +
-
-Math.cos(lat1*Math.PI/180) *
-
-Math.cos(lat2*Math.PI/180) *
-
-Math.sin(dLon/2)**2;
-
-return R * 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+);
 
 }
 
+previous={lat,lng};
+
+});
+
+if(history.length){
+
+const last=history[history.length-1];
+
+marker.setLatLng([last.latitude,last.longitude]);
+
+map.fitBounds(route.getBounds());
+
+document.getElementById("distance").innerHTML=
+
+totalDistance.toFixed(2)+" km";
+
+}
+
+});
+
+socket.on("location-update",(user)=>{
+
+if(user.id!==id) return;
+
+const lat=Number(user.lat);
+
+const lng=Number(user.lng);
+
+marker.setLatLng([lat,lng]);
+
+route.addLatLng([lat,lng]);
+
+if(previous){
+
+totalDistance+=distance(
+
+previous.lat,
+
+previous.lng,
+
+lat,
+
+lng
+
+);
+
+}
+
+previous={lat,lng};
+
+document.getElementById("distance").innerHTML=
+
+totalDistance.toFixed(2)+" km";
+
+document.getElementById("speed").innerHTML=
+
+Number(user.speed||0).toFixed(2)+" km/h";
+
+marker.bindPopup(`
+
+<b>User :</b> ${id}<br><br>
+
+📍 ${user.address || "Address Loading..."}<br><br>
+
+Latitude : ${lat}<br>
+
+Longitude : ${lng}<br>
+
+Speed : ${Number(user.speed||0).toFixed(2)} km/h<br>
+
+Accuracy : ${Number(user.accuracy||0).toFixed(2)} m<br>
+
+Status : ${user.status}<br>
+
+Updated : ${user.lastUpdated}
+
+`).openPopup();
+
+map.setView([lat,lng],17);
+
+});
+
+function distance(lat1,lon1,lat2,lon2){
+
+const R=6371;
+
+const dLat=(lat2-lat1)*Math.PI/180;
+
+const dLon=(lon2-lon1)*Math.PI/180;
+
+const a=
+
+Math.sin(dLat/2)**2+
+
+Math.cos(lat1*Math.PI/180)*
+
+Math.cos(lat2*Math.PI/180)*
+
+Math.sin(dLon/2)**2;
+
+return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+
+}
 
 </script>
 
 </body>
 
 </html>
-

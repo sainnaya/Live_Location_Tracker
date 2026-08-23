@@ -11,7 +11,7 @@
 
     token: process.env.TOKEN || "abcdefghijklmnopqrstuvwxyz",
 
-    mongoURI: process.env.MONGODB_URI || "mongodb+srv://sain0110_db_user:07gWnIM5nu5BNF40@cluster0.qgqrxpr.mongodb.net/?appName=Cluster0"
+    mongoURI: process.env.MONGODB_URI || "mongodb+srv://sain0110_db_user:fmhwnsfIk4RIn1SA@cluster0.qgqrxpr.mongodb.net/?appName=Cluster0"
 
 
 };

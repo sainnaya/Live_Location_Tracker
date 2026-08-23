@@ -3,6 +3,7 @@ const http = require("http");
 const socketIO = require("socket.io");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const config = require("./config");
 
